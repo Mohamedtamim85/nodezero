@@ -14,8 +14,7 @@ from nodezero.modules.port_scan import PortScanModule
 from nodezero.modules.tls_check import TlsCheckModule
 
 ALL_MODULES: dict[str, type[Module]] = {
-    m.name: m
-    for m in (PortScanModule, HttpHeadersModule, TlsCheckModule, DnsReconModule)
+    m.name: m for m in (PortScanModule, HttpHeadersModule, TlsCheckModule, DnsReconModule)
 }
 
 __all__ = [

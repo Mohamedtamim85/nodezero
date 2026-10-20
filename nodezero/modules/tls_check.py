@@ -38,7 +38,7 @@ class TlsCheckModule(Module):
                     cert = tls_sock.getpeercert()
                     protocol = tls_sock.version()
                     cipher = tls_sock.cipher()
-        except (OSError, socket.timeout, ssl.SSLError) as exc:
+        except (TimeoutError, OSError, ssl.SSLError) as exc:
             return [
                 Finding(
                     module=self.name,
@@ -59,7 +59,9 @@ class TlsCheckModule(Module):
                 evidence={"protocol": protocol, "cipher": cipher},
                 recommendation=(
                     f"{protocol} is deprecated and should be disabled server-side; "
-                    "require TLS 1.2 or 1.3 only." if protocol in WEAK_PROTOCOLS else ""
+                    "require TLS 1.2 or 1.3 only."
+                    if protocol in WEAK_PROTOCOLS
+                    else ""
                 ),
             )
         ]

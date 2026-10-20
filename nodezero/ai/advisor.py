@@ -48,7 +48,8 @@ class HeuristicAdvisor:
 
     def summarize(self, findings: list[Finding]) -> Advisory:
         ranked = sorted(findings, key=lambda f: SEVERITY_ORDER[f.severity])
-        top = [f for f in ranked if f.severity in (Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM)][:10]
+        notable = (Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM)
+        top = [f for f in ranked if f.severity in notable][:10]
 
         counts: dict[str, int] = {}
         for f in findings:
@@ -58,8 +59,10 @@ class HeuristicAdvisor:
         summary_lines = [
             f"Assessed {len(targets)} target(s), producing {len(findings)} findings.",
             "Severity breakdown: "
-            + ", ".join(f"{sev}={counts.get(sev, 0)}" for sev in
-                        ("critical", "high", "medium", "low", "info")),
+            + ", ".join(
+                f"{sev}={counts.get(sev, 0)}"
+                for sev in ("critical", "high", "medium", "low", "info")
+            ),
         ]
         if top:
             summary_lines.append(
@@ -118,8 +121,7 @@ class ClaudeAdvisor:
             "executive summary (4-8 sentences) for a non-technical "
             "stakeholder: overall risk posture, the 2-4 most important issues "
             "to fix first, and no action items beyond what the findings "
-            "support. Do not invent findings not listed below.\n\n"
-            + "\n".join(finding_lines)
+            "support. Do not invent findings not listed below.\n\n" + "\n".join(finding_lines)
         )
         try:
             response = client.messages.create(

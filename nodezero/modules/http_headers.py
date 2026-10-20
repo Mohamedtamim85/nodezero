@@ -24,8 +24,7 @@ SECURITY_HEADERS = {
     "x-frame-options": (
         "X-Frame-Options / frame-ancestors missing",
         Severity.LOW,
-        "Add 'X-Frame-Options' or a CSP 'frame-ancestors' directive to mitigate "
-        "clickjacking.",
+        "Add 'X-Frame-Options' or a CSP 'frame-ancestors' directive to mitigate clickjacking.",
     ),
     "content-security-policy": (
         "Content-Security-Policy missing",
@@ -41,8 +40,9 @@ class HttpHeadersModule(Module):
     description = "Fetch '/' over HTTP(S) and check common security response headers."
     intrusive = False
 
-    def __init__(self, *args, schemes: tuple[str, ...] = ("https", "http"),
-                 timeout: float = 5.0, **kwargs):
+    def __init__(
+        self, *args, schemes: tuple[str, ...] = ("https", "http"), timeout: float = 5.0, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.schemes = schemes
         self.timeout = timeout

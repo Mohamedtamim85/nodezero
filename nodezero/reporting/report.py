@@ -43,12 +43,12 @@ def render_markdown(authorization: EngagementAuthorization, result: EngagementRe
     for target in sorted(by_target):
         lines.append(f"### {target}")
         lines.append("")
-        target_findings = sorted(
-            by_target[target], key=lambda f: SEVERITY_ORDER.index(f.severity)
-        )
+        target_findings = sorted(by_target[target], key=lambda f: SEVERITY_ORDER.index(f.severity))
         for f in target_findings:
             emoji = SEVERITY_EMOJI.get(f.severity, "")
-            lines.append(f"- {emoji} **[{f.severity.value.upper()}]** {f.title} _(module: {f.module})_")
+            lines.append(
+                f"- {emoji} **[{f.severity.value.upper()}]** {f.title} _(module: {f.module})_"
+            )
             if f.detail:
                 lines.append(f"  - {f.detail}")
             if f.recommendation:

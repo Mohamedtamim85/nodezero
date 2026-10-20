@@ -16,8 +16,33 @@ from nodezero.findings import Finding, Severity
 from nodezero.modules.base import Module
 
 COMMON_PORTS = [
-    21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 465, 587,
-    993, 995, 1433, 1521, 3306, 3389, 5432, 5900, 6379, 8080, 8443, 9200,
+    21,
+    22,
+    23,
+    25,
+    53,
+    80,
+    110,
+    111,
+    135,
+    139,
+    143,
+    443,
+    445,
+    465,
+    587,
+    993,
+    995,
+    1433,
+    1521,
+    3306,
+    3389,
+    5432,
+    5900,
+    6379,
+    8080,
+    8443,
+    9200,
     27017,
 ]
 
@@ -38,7 +63,7 @@ def _probe(target: str, port: int, timeout: float) -> tuple[int, bool, str]:
         with socket.create_connection((target, port), timeout=timeout) as sock:
             banner = _grab_banner(sock)
             return port, True, banner
-    except (OSError, socket.timeout):
+    except (TimeoutError, OSError):
         return port, False, ""
 
 
@@ -47,8 +72,14 @@ class PortScanModule(Module):
     description = "TCP connect scan of common ports with best-effort banner grab."
     intrusive = False
 
-    def __init__(self, *args, ports: list[int] | None = None, timeout: float = 1.5,
-                 max_workers: int = 50, **kwargs):
+    def __init__(
+        self,
+        *args,
+        ports: list[int] | None = None,
+        timeout: float = 1.5,
+        max_workers: int = 50,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.ports = ports or COMMON_PORTS
         self.timeout = timeout

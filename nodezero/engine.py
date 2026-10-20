@@ -67,9 +67,7 @@ class Engagement:
         module_classes = (
             [ALL_MODULES[n] for n in module_names] if module_names else list(ALL_MODULES.values())
         )
-        module_classes = [
-            m for m in module_classes if include_intrusive or not m.intrusive
-        ]
+        module_classes = [m for m in module_classes if include_intrusive or not m.intrusive]
 
         findings: list[Finding] = []
         for module_cls in module_classes:

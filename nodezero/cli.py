@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import datetime as _dt
 import ipaddress
-import sys
 
 import click
 from rich.console import Console
@@ -74,7 +73,7 @@ def init_engagement(output_path: str):
     try:
         scope = Scope(allow=allow, deny=deny)
     except ValueError as exc:
-        raise click.ClickException(str(exc))
+        raise click.ClickException(str(exc)) from exc
 
     console.print(f"\n[yellow]{REQUIRED_ATTESTATION}[/yellow]\n")
     accepted = click.confirm("Do you accept this attestation?", default=False)
@@ -110,10 +109,21 @@ def list_modules():
 
 @main.command("run")
 @click.argument("engagement_path", type=click.Path(exists=True))
-@click.option("--target", "-t", "targets", multiple=True, required=True,
-              help="Target host/IP/CIDR. Repeatable.")
-@click.option("--module", "-m", "modules", multiple=True,
-              help="Module name to run (repeatable). Default: all non-intrusive modules.")
+@click.option(
+    "--target",
+    "-t",
+    "targets",
+    multiple=True,
+    required=True,
+    help="Target host/IP/CIDR. Repeatable.",
+)
+@click.option(
+    "--module",
+    "-m",
+    "modules",
+    multiple=True,
+    help="Module name to run (repeatable). Default: all non-intrusive modules.",
+)
 @click.option("--format", "fmt", type=click.Choice(["markdown", "json"]), default="markdown")
 @click.option("--output", "-o", "output_path", type=click.Path(), default=None)
 @click.option("--max-hosts", type=int, default=4096, help="Safety cap on CIDR expansion.")
@@ -126,7 +136,7 @@ def run(engagement_path, targets, modules, fmt, output_path, max_hosts, no_ai, a
     try:
         authorization.validate()
     except Exception as exc:
-        raise click.ClickException(str(exc))
+        raise click.ClickException(str(exc)) from exc
 
     try:
         expanded_targets = _expand_cidr_targets(list(targets), max_hosts=max_hosts)
@@ -142,9 +152,12 @@ def run(engagement_path, targets, modules, fmt, output_path, max_hosts, no_ai, a
             f"authorized scope: {preview}{more}\nScope: {authorization.scope.describe()}"
         )
 
-    console.print(f"[bold]{authorization.engagement_name}[/bold]  "
-                  f"(authorized by {authorization.authorized_by})")
-    console.print(f"Targets: {len(expanded_targets)}  |  Modules: {', '.join(modules) or 'all (non-intrusive)'}")
+    console.print(
+        f"[bold]{authorization.engagement_name}[/bold]  "
+        f"(authorized by {authorization.authorized_by})"
+    )
+    module_label = ", ".join(modules) or "all (non-intrusive)"
+    console.print(f"Targets: {len(expanded_targets)}  |  Modules: {module_label}")
 
     engagement = Engagement(authorization, audit_path=audit_log)
 
@@ -159,10 +172,15 @@ def run(engagement_path, targets, modules, fmt, output_path, max_hosts, no_ai, a
             use_ai=not no_ai,
         )
 
-    console.print(f"[green]Done.[/green] {len(result.findings)} findings collected "
-                  f"(advisory: {result.advisory.generated_by}).")
+    console.print(
+        f"[green]Done.[/green] {len(result.findings)} findings collected "
+        f"(advisory: {result.advisory.generated_by})."
+    )
 
-    report = render_json(authorization, result) if fmt == "json" else render_markdown(authorization, result)
+    if fmt == "json":
+        report = render_json(authorization, result)
+    else:
+        report = render_markdown(authorization, result)
     if output_path:
         with open(output_path, "w") as f:
             f.write(report)

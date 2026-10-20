@@ -30,3 +30,19 @@ include = ["nodezero*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+# Keep this explicit rather than relying on whatever a given ruff version's
+# ambient defaults happen to be, so CI results don't shift under us on a
+# ruff upgrade.
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "B008",  # function calls in default args — fine for click options
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B017"]  # pytest.raises(Exception) is intentional in a couple of tests

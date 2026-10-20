@@ -59,7 +59,23 @@ nodezero run engagement.json --target 10.0.5.10 --target 10.0.5.0/28 \
 
 # Without ANTHROPIC_API_KEY set, or with --no-ai, reports use a deterministic
 # offline summary instead of a model-generated one.
+
+# 4. Every run is also auto-saved as JSON under nodezero_reports/ (opt out
+#    with --reports-dir ""). Browse past reports in a browser:
+pip install -e ".[web]"
+nodezero serve --reports-dir nodezero_reports
+# -> open http://127.0.0.1:8765
 ```
+
+## Web UI
+
+`nodezero serve` starts a small, **read-only** local Flask app over whatever
+JSON reports are sitting in `--reports-dir`. It lists past engagements and
+renders each one's findings with severity-colored badges. It cannot start a
+scan, change an authorization, or write anything — it only reads files
+`nodezero run` already wrote. It binds to `127.0.0.1` by default; passing
+`--host` to anything else prints a warning, since the viewer has no
+authentication of its own.
 
 ## Modules (all non-intrusive, read-only)
 
@@ -92,6 +108,9 @@ nodezero/
     advisor.py         # HeuristicAdvisor (offline) / ClaudeAdvisor (optional, read-only summarizer)
   reporting/
     report.py          # Markdown / JSON report rendering
+    store.py            # save/list/load JSON reports on disk (for the web UI)
+  webui/
+    app.py              # read-only Flask app: list + view saved reports
   cli.py                # click-based CLI
 ```
 

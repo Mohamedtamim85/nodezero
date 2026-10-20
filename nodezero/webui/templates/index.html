@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Reports &mdash; nodezero-lite{% endblock %}
+{% block content %}
+  <h2>Saved reports</h2>
+
+  {% if not reports %}
+    <p class="empty">
+      No saved reports yet. Run
+      <code>nodezero run &lt;engagement.json&gt; --target &lt;target&gt;</code>
+      to create one &mdash; it's saved here automatically.
+    </p>
+  {% else %}
+    <table class="reports">
+      <thead>
+        <tr>
+          <th>Engagement</th>
+          <th>Generated (UTC)</th>
+          <th>Targets</th>
+          <th>Findings</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr>
+          <td>{{ r.engagement_name }}</td>
+          <td>{{ r.generated_at }}</td>
+          <td>{{ r.targets|length }}</td>
+          <td class="badges">
+            {% for sev in severity_order %}
+              {% if r.severity_counts.get(sev) %}
+                <span class="badge sev-{{ sev }}">{{ sev }}: {{ r.severity_counts[sev] }}</span>
+              {% endif %}
+            {% endfor %}
+            {% if r.finding_count == 0 %}<span class="badge sev-info">none</span>{% endif %}
+          </td>
+          <td><a href="{{ url_for('report_detail', filename=r.filename) }}">View &rarr;</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

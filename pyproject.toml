@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nodezero-lite"
+version = "0.1.0"
+description = "A local, authorization-gated AI-assisted penetration testing console for authorized security assessments."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "nodezero-lite contributors" }]
+keywords = ["security", "pentest", "authorized-testing", "recon", "ai"]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "rich>=13.0",
+    "click>=8.1",
+]
+
+[project.optional-dependencies]
+ai = ["anthropic>=0.40"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0"]
+
+[project.scripts]
+nodezero = "nodezero.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nodezero*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

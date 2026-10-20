@@ -19,7 +19,7 @@ from rich.table import Table
 from nodezero.authorization import REQUIRED_ATTESTATION, EngagementAuthorization
 from nodezero.engine import Engagement
 from nodezero.modules import ALL_MODULES
-from nodezero.reporting import render_json, render_markdown
+from nodezero.reporting import render_json, render_markdown, save_report
 from nodezero.scope import Scope
 
 console = Console()
@@ -129,7 +129,16 @@ def list_modules():
 @click.option("--max-hosts", type=int, default=4096, help="Safety cap on CIDR expansion.")
 @click.option("--no-ai", is_flag=True, help="Force the offline heuristic advisor.")
 @click.option("--audit-log", default="nodezero_audit.jsonl", help="Path to the audit log.")
-def run(engagement_path, targets, modules, fmt, output_path, max_hosts, no_ai, audit_log):
+@click.option(
+    "--reports-dir",
+    default="nodezero_reports",
+    type=click.Path(),
+    help="Every run is also saved here as JSON, for 'nodezero serve' to list. "
+    "Pass an empty string to skip saving.",
+)
+def run(
+    engagement_path, targets, modules, fmt, output_path, max_hosts, no_ai, audit_log, reports_dir
+):
     """Run an authorized engagement against TARGETS using ENGAGEMENT_PATH."""
     authorization = EngagementAuthorization.load(engagement_path)
 
@@ -187,6 +196,47 @@ def run(engagement_path, targets, modules, fmt, output_path, max_hosts, no_ai, a
         console.print(f"Report written to {output_path}")
     else:
         console.print(report)
+
+    if reports_dir:
+        saved_path = save_report(reports_dir, authorization, result)
+        console.print(
+            f"Saved to {saved_path} (view with: nodezero serve --reports-dir {reports_dir})"
+        )
+
+
+@main.command("serve")
+@click.option(
+    "--reports-dir",
+    default="nodezero_reports",
+    type=click.Path(),
+    help="Directory of saved JSON reports to serve (written by 'nodezero run').",
+)
+@click.option("--host", default="127.0.0.1", help="Bind address. Defaults to localhost only.")
+@click.option("--port", default=8765, type=int)
+def serve(reports_dir, host, port):
+    """Serve a local, read-only web viewer over saved reports.
+
+    This only renders report files 'nodezero run' already wrote to
+    REPORTS-DIR — it cannot start a scan or change any authorization.
+    """
+    try:
+        from nodezero.webui.app import create_app
+    except ImportError as exc:
+        raise click.ClickException(
+            "The web UI needs the 'web' extra. Install with: pip install -e '.[web]'"
+        ) from exc
+
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        console.print(
+            "[yellow]Warning:[/yellow] binding to a non-local host exposes report "
+            "data (target lists, findings) to anyone who can reach it on your "
+            "network. This viewer has no authentication of its own."
+        )
+
+    app = create_app(reports_dir)
+    console.print(f"[green]Serving reports from {reports_dir} at http://{host}:{port}[/green]")
+    console.print("Press CTRL+C to stop.")
+    app.run(host=host, port=port)
 
 
 if __name__ == "__main__":
